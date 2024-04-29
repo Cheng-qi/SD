@@ -1,1 +1,0 @@
-data_name,split,patience,max_epoch,lr,weight_decay,log_interval,model_name,hidden_size,num_layer,dropout,gat_heads,gin_eps_trainable,seed,log_dir,acc,smv,smv_intra,smv_inter

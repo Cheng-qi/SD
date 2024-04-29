@@ -1,24 +1,15 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from typing import Any, Dict, List, Optional, Union
 import torch
 from torch import nn
 import random
 import torch.nn.functional as F
 import torch_geometric.nn as pygnn
-# from torch_geometric.nn import GATConv
-# from torch_geometric.nn import GINConv
-from functools import partial
 import math
-from torch_geometric.nn.aggr import Aggregation 
 
 from torch import Tensor
 from torch_geometric.typing import (
-    Adj,
-    OptPairTensor,
-    OptTensor,
-    Size,
     SparseTensor,
 )
 from torch_geometric.utils import spmm
@@ -38,11 +29,6 @@ class WeightScoreLayer(nn.Module):
         x_std = spmm(adj, (x-x_mean)**2, "mean")
         # score = self.weight_score_func(torch.cat([x_mean, x_std, x], -1))
         score = self.weight_score_func(torch.cat([x_mean, x_std, x], -1))
-        # score = self.weight_score_func(torch.cat([x_mean * x, x_std], -1))
-        # score = self.weight_score_func(x_mean * x)
-        # score = self.weight_score_func(x_mean * x+x_std)
-        # score = torch.sigmoid((x_mean * x).mean())
-        # score = torch.sigmoid((x_mean * x).sum(-1, True))
         return score
 # pygnn.GCN
 class SSD(nn.Module):
@@ -96,13 +82,6 @@ class SSD(nn.Module):
 
             y_y_hat_intra = torch.triu(y_y_hat_intra, diagonal=0)
             y_y_hat_inter = torch.triu(y_y_hat_inter, diagonal=0)
-            # y_y_hat = torch.triu(adj_2 * (1- y_mat @ y_mat.t()), diagonal=0)
-            # y_y_hat = torch.triu(adj_2 * (y_mat @ y_mat.t()), diagonal=0)
-            # y_y_hat_inter = torch.triu(adj_2 * (1- y_mat @ y_mat.t()), diagonal=0)
-            # y_y_hat_intra = torch.triu(adj_2 * (1- y_mat @ y_mat.t()), diagonal=0)
-
-
-            # rows, cols = torch.where(y_y_hat !=0)
             rows_inter, cols_inter = torch.where(y_y_hat_inter >0)
             rows_intra, cols_intra = torch.where(y_y_hat_intra >0)
             if rows_inter.shape[0]>100000:
@@ -115,11 +94,6 @@ class SSD(nn.Module):
                 cols_intra = cols_intra[random_intar]
         ss_1 = (( h[rows_inter] * h[cols_inter] * torch.sqrt(alphas[rows_inter]).view(-1,1) * torch.sqrt(alphas[cols_inter]).view(-1,1)).sum(-1) * y_y_hat_inter[rows_inter, cols_inter]).sum()/(adj_2.sum()/2) \
         +   ((1/(1+((h[rows_intra] * h[cols_intra])* torch.sqrt(alphas[rows_intra]).view(-1,1)*torch.sqrt(alphas[cols_intra]).view(-1,1)).sum(-1))) * y_y_hat_intra[rows_intra, cols_intra]).sum()/(adj_2.sum()/2)
-        # ss_all = 0
-        # if last_h !=None:
-        #     ss_all = -(((h[rows_inter] - h[cols_inter])**2 * alphas[rows_inter].view(-1,1)*alphas[cols_inter].view(-1,1)).sum(-1) * y_y_hat_inter[rows_inter, cols_inter]).sum()/y_y_hat_inter.sum() \
-        # +(((h[rows_intra] - h[cols_intra])**2 * alphas[rows_intra].view(-1,1)*alphas[cols_intra].view(-1,1)).sum(-1) * y_y_hat_intra[rows_intra, cols_intra]).sum()/y_y_hat_intra.sum()
-        # ss_all = 
         return  ss_1
         
     def loss(self, outs, labels, train_mask = None, val_mask = None, test_mask = None):
@@ -141,12 +115,6 @@ class SSD(nn.Module):
             alphas[test_mask] = self.lo_ss_test 
             if not (torch.logical_not(train_mask)==False).all():
                 labels[torch.logical_not(train_mask)] = outs[0][torch.logical_not(train_mask)].detach().argmax(-1)
-            # if not (test_mask==False).all():
-            #     labels[test_mask] = outs[0][test_mask].detach().argmax(-1)
-            # if not (val_mask==False).all():
-            #     labels[val_mask] = outs[0][val_mask].detach().argmax(-1)
-            
-            # * F.softmax(outs[0][test_mask].detach(), -1).max(-1)[0]
             for i, h in enumerate(hs[3:]):
                 l += self.ss_loss(h, labels, adj, labeled_mask, alphas) * math.exp((i)/len(hs))
         return l
@@ -217,7 +185,6 @@ class SDGAT(SSD):
         self.act = nn.ReLU()
 
         self.params_gnn =self.gnn_layers
-        # self.params_other =nn.ModuleList([self.weightScore])        
         if residual_type != None:
             self.residual_fc = nn.Sequential(
                 nn.Linear(in_channels, hidden_channels * gat_heads),
@@ -255,10 +222,7 @@ class SDGCN(SSD):
             self.gnn_layers = nn.ModuleList([pygnn.GCNConv(in_channels, out_channels)])
         else:
             self.gnn_layers = nn.ModuleList([pygnn.GCNConv(in_channels, hidden_channels)])
-            # if residual_type != None: self.layer_norm_layers = nn.ModuleList()
             for i in range(num_layers-1):
-                # if residual_type != None:
-                #     self.layer_norm_layers.append(nn.LayerNorm(hidden_size))
                 self.gnn_layers.append(pygnn.GCNConv(in_hidden_size, hidden_channels if i!=num_layers-2 else out_channels))
                 if residual_type == "de-smoothing":
                     self.weightScore = WeightScoreLayer(hidden_channels)
@@ -326,8 +290,7 @@ class SDGIN(SSD):
                 nn.ReLU()
             )
             self.params_other.append(self.residual_fc)
-    # def mlp(self, in_channels, out_channels):
-    #     in_channels
+
 
 
 
