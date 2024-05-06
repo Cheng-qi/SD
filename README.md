@@ -2,7 +2,7 @@
 This repository is the implementation of the experiments in the following paper:
 
 ```
-@article{RN13,
+@article{SD,
    author = "Cheng, Qi and Long, lang and Feng, Weixing",
    title = "A Universal Strategy for Smoothing Deceleration in Deep Graph Neural Networks",
    year = "2024",

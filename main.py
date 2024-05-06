@@ -27,11 +27,9 @@ parser.add_argument('--num_layer', type=int, default=8, help='Number of layers.'
 parser.add_argument('--dropout', type=float, default=0.5, help='Dropout rate (1 - keep probability).')
 parser.add_argument('--gat_heads', type=int, default=1, help='GAT Heads')
 parser.add_argument('--gat_dropout', type=float, default=0.5, help='Gat Dropout rate (1 - keep probability).')
-parser.add_argument('--lo_ss_train', type=float, default=0.1, help='alpha smooth loss for train')
-parser.add_argument('--lo_ss_val', type=float, default=0.1, help='alpha smooth loss for valid')
-parser.add_argument('--lo_ss_test', type=float, default=0.1, help='alpha smooth loss for test')
+parser.add_argument('--loss_lambda', type=float, default=0.1, help='lambda smooth loss')
 parser.add_argument('--gin_eps_trainable', action="store_true", default=False)
-parser.add_argument('--seed', type=int, default=5, help='Random seed.')
+parser.add_argument('--seed', type=int, default=6, help='Random seed.')
 parser.add_argument('--log_dir', type=str, default='./logs', help='log dir')
 
 args = parser.parse_args()
@@ -102,9 +100,9 @@ model = Model(
     dropout=args.dropout,
     residual_type = args.residual_type,
     residual_fusion = args.residual_fusion,
-    lo_ss_train = args.lo_ss_train,
-    lo_ss_val = args.lo_ss_val,
-    lo_ss_test = args.lo_ss_test,
+    lo_ss_train = args.loss_lambda,
+    lo_ss_val = args.loss_lambda,
+    lo_ss_test = args.loss_lambda,
     gat_dropout=args.gat_dropout,
     gat_heads=args.gat_heads,
     gin_eps_trainable=args.gin_eps_trainable

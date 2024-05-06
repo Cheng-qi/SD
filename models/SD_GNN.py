@@ -115,8 +115,8 @@ class SSD(nn.Module):
             alphas[test_mask] = self.lo_ss_test 
             if not (torch.logical_not(train_mask)==False).all():
                 labels[torch.logical_not(train_mask)] = outs[0][torch.logical_not(train_mask)].detach().argmax(-1)
-            for i, h in enumerate(hs[3:]):
-                l += self.ss_loss(h, labels, adj, labeled_mask, alphas) * math.exp((i)/len(hs))
+            for i, h in enumerate(hs[2:-1]):
+                l += (self.ss_loss(h, labels, adj, labeled_mask, alphas) + (hs[i]- hs[i-1]).norm()/x.shape[0]) * math.exp((i)/len(hs))
         return l
     def getSMV(cls, outs, labels, **kward):
         x, hs, adj = outs

@@ -1,14 +1,14 @@
 #!/bin/bash
 lr=0.01
-data_name=cora
+data_name=citeseer
 model_name=sdgcn
 weight_decay1=0.001
-weight_decay2=0.01
+weight_decay2=0.00001
 hidden_size=128
-dropout=0.2
-num_layer=16
+dropout=0.5
+num_layer=8
 residual_fusion=add
-lo_ss_train=0.001
+loss_lambda=0.01
 
 python main.py \
     --data_name $data_name \
@@ -21,7 +21,5 @@ python main.py \
     --dropout $dropout \
     --residual_fusion $residual_fusion \
     --num_layer $num_layer \
-    --lo_ss_train $lo_ss_train \
-    --lo_ss_val $lo_ss_train \
-    --lo_ss_test $lo_ss_train
+    --loss_lambda $loss_lambda
 
